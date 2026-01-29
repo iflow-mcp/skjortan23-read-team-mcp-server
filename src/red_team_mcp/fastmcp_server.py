@@ -14,9 +14,8 @@ from fastmcp import FastMCP
 from red_team_mcp import database, ssh_scanner, metasploit_scanner, domain_discovery
 from red_team_mcp.bannerGrabber import getBanner
 import asyncio
-from masscan import mass_port_scan
 import logging
-from red_team_mcp.vulnerability_scanner import scan_with_nuclei
+from red_team_mcp.nuclei_scanner import enumerate_vulnerabilities
 
 
 # Pydantic models for better schema control
@@ -63,7 +62,10 @@ app = FastMCP(
     )
 
 # Initialize database on startup
-database.init_database()
+try:
+    database.init_database()
+except Exception as e:
+    print(f"Database initialization skipped: {e}")
 
 # Register SSH tools
 ssh_scanner.register_tools(app)
@@ -104,7 +106,19 @@ async def resolve_hostname_to_ip(
         })
 
 def mass_port_scan_sync(target, ports, rate=1000):
-    return asyncio.run(mass_port_scan(target, ports, rate))
+    # Use masscan_scanner module instead of masscan module
+    from red_team_mcp.masscan_scanner import execute_masscan_streaming
+    success, stderr, output_file = execute_masscan_streaming(target, ports, rate)
+    if success and output_file.exists():
+        import json
+        results = []
+        with open(output_file) as f:
+            for line in f:
+                if line.strip():
+                    results.append(line.strip())
+        output_file.unlink()
+        return results
+    return []
 
 @app.tool()
 async def port_scan(params: PortScanParams) -> List[str]:
@@ -151,7 +165,7 @@ async def port_scan(params: PortScanParams) -> List[str]:
         "openWorldHint": True
     },
 )
-async def enumerate_vulnerabilities(host: str, port: int) -> []:
+async def enumerate_vulnerabilities(host: str, port: int) -> List[Dict]:
     """
     ENUMERATE VULNERABILITIES: Find security issues and CVEs using nuclei scanner with streaming output.
 
@@ -175,7 +189,7 @@ async def enumerate_vulnerabilities(host: str, port: int) -> []:
     """
 
     def scan_with_nuclei_sync(host: str, port: int):
-        return asyncio.run(scan_with_nuclei(host, port))
+        return asyncio.run(enumerate_vulnerabilities(host, port))
 
     findings = await asyncio.to_thread(scan_with_nuclei_sync, host, port)
     if not len(findings):
