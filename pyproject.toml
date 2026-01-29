@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "iflow-mcp_skjortan23_red-team-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "An MCP server for AI agents to use during red teaming exercises"
 authors = [
     {name = "Red Team MCP", email = "redteam@example.com"}
@@ -32,6 +32,7 @@ dependencies = [
     "agno>=0.1.0",
     "ollama>=0.4.0",
     "sqlalchemy>=2.0.0",
+    "pymongo>=4.0.0",
 ]
 
 [project.optional-dependencies]
