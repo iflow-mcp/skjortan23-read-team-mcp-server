@@ -2,9 +2,22 @@ import json
 import socket
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any
-from pymongo import MongoClient, ASCENDING, DESCENDING
-from pymongo.errors import ConnectionFailure, DuplicateKeyError
-from pymongo.results import InsertOneResult
+
+try:
+    from pymongo import MongoClient, ASCENDING, DESCENDING
+    from pymongo.errors import ConnectionFailure, DuplicateKeyError
+    from pymongo.results import InsertOneResult
+    PYMONGO_AVAILABLE = True
+except ImportError:
+    PYMONGO_AVAILABLE = False
+    # Create dummy classes for type compatibility
+    class ConnectionFailure(Exception):
+        pass
+    class DuplicateKeyError(Exception):
+        pass
+    class InsertOneResult:
+        def __init__(self, inserted_id=None):
+            self.inserted_id = inserted_id
 
 # Database setup
 MONGO_URI = "mongodb://localhost:27017/"
@@ -17,6 +30,13 @@ _database = None
 def get_database():
     """Get MongoDB database connection with improved connection management."""
     global _mongo_client, _database
+    
+    if not PYMONGO_AVAILABLE:
+        print("⚠️  pymongo not available, using dummy database")
+        if _database is None:
+            _database = DummyDatabase()
+        return _database
+    
     if _mongo_client is None:
         print(f"🔌 Connecting to MongoDB at {MONGO_URI}")
         # Configure MongoDB client with better connection pooling and timeouts
@@ -44,6 +64,36 @@ def get_database():
             print(f"❌ MongoDB connection failed: {e}")
             raise
     return _database
+
+
+class DummyCollection:
+    """Dummy collection for when MongoDB is not available."""
+    def __init__(self, name):
+        self.name = name
+        
+    def create_index(self, *args, **kwargs):
+        pass
+        
+    def find(self, *args, **kwargs):
+        return []
+        
+    def find_one(self, *args, **kwargs):
+        return None
+        
+    def insert_one(self, *args, **kwargs):
+        return InsertOneResult(inserted_id="dummy_id")
+        
+    def update_one(self, *args, **kwargs):
+        pass
+        
+    def delete_one(self, *args, **kwargs):
+        pass
+
+
+class DummyDatabase:
+    """Dummy database for when MongoDB is not available."""
+    def __getattr__(self, name):
+        return DummyCollection(name)
 
 def close_database():
     """Close MongoDB database connection and cleanup resources."""

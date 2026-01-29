@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "iflow-mcp_skjortan23_red-team-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "An MCP server for AI agents to use during red teaming exercises"
 authors = [
     {name = "Red Team MCP", email = "redteam@example.com"}

@@ -1,1 +1,1 @@
-{"serverConfig": {"mcpServers": {"red-team-mcp": {"command": "uvx", "args": ["--from", "iflow-mcp_skjortan23_red-team-mcp", "red-team-mcp"], "values": {}}}}}
+{"serverConfig": "{\"mcpServers\":{\"red-team-mcp\":{\"command\":\"uvx\",\"args\":[\"--from\",\"iflow-mcp_skjortan23_red-team-mcp\",\"red-team-mcp\"],\"values\":{}}}}"}
